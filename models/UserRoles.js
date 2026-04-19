@@ -1,33 +1,10 @@
-const { Model, DataTypes } = require('sequelize');
+const mongoose = require('mongoose');
 
-class UserRoles extends Model {}
+const userRolesSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
+}, { timestamps: true });
 
-UserRoles.init({
-    userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: 'Users', // assuming you have a Users model
-            key: 'id'
-        }
-    },
-    roleId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: 'Roles', // assuming you have a Roles model
-            key: 'id'
-        }
-    },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
-    },
-},{
-    sequelize,
-    modelName: 'UserRoles',
-    tableName: 'user_roles',
-});
+userRolesSchema.index({ userId: 1, roleId: 1 }, { unique: true });
 
-module.exports = UserRoles;
+module.exports = mongoose.model('UserRoles', userRolesSchema);
