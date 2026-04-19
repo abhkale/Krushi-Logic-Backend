@@ -1,0 +1,1 @@
+{ "name": "krushi-logic-backend", "version": "1.0.0", "description": "Backend for Krushi Logic", "main": "server.js", "scripts": { "start": "node server.js" }, "dependencies": { "express": "^4.17.1", "dotenv": "^10.0.0" }, "devDependencies": {}, "keywords": [], "author": "abhkale", "license": "ISC" }
