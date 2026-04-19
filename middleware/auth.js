@@ -8,8 +8,13 @@ const auth = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        logger.error('JWT_SECRET environment variable is not set');
+        return res.status(500).json({ success: false, message: 'Server configuration error' });
+    }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret_change_in_production');
+        const decoded = jwt.verify(token, secret);
         req.user = decoded;
         next();
     } catch (err) {

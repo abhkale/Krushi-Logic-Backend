@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const UserLocation = require('../models/UserLocation');
-const { PAGINATION } = require('../utils/constants');
+const { PAGINATION, USER_ROLES, USER_STATUS } = require('../utils/constants');
 const logger = require('../utils/logger');
 
 const getUserById = async (userId) => {
@@ -30,8 +30,11 @@ const updateUser = async (userId, updateData) => {
 
 const listUsers = async ({ page = PAGINATION.DEFAULT_PAGE, limit = PAGINATION.DEFAULT_LIMIT, role, status } = {}) => {
     const filter = {};
-    if (role) filter.role = role;
-    if (status) filter.status = status;
+    // Validate against allowed enum values to prevent NoSQL injection
+    const allowedRoles = Object.values(USER_ROLES);
+    const allowedStatuses = Object.values(USER_STATUS);
+    if (role && allowedRoles.includes(role)) filter.role = role;
+    if (status && allowedStatuses.includes(status)) filter.status = status;
 
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([

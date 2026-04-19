@@ -12,10 +12,19 @@ const createProduct = async (sellerId, productData) => {
 const getProducts = async ({ page = PAGINATION.DEFAULT_PAGE, limit = PAGINATION.DEFAULT_LIMIT, categoryId, status, sellerId, search } = {}) => {
     const filter = {};
     if (categoryId) filter.categoryId = categoryId;
-    if (status) filter.status = status;
+
+    // Validate status against allowed enum values to prevent NoSQL injection
+    const allowedStatuses = Object.values(PRODUCT_STATUS);
+    if (status && allowedStatuses.includes(status)) filter.status = status;
     else filter.status = PRODUCT_STATUS.ACTIVE;
+
     if (sellerId) filter.sellerId = sellerId;
-    if (search) filter.title = { $regex: search, $options: 'i' };
+
+    // Escape special regex chars from user input to prevent ReDoS
+    if (search) {
+        const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        filter.title = { $regex: escaped, $options: 'i' };
+    }
 
     const skip = (page - 1) * limit;
     const [products, total] = await Promise.all([

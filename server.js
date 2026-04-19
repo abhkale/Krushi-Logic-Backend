@@ -18,7 +18,21 @@ const PORT = process.env.PORT || 3000;
 
 // Security middleware
 app.use(helmet());
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS || '*' }));
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+    : [];
+app.use(cors({
+    origin: allowedOrigins.length > 0
+        ? (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        }
+        : false,
+    credentials: true,
+}));
 
 // Performance middleware
 app.use(compression());

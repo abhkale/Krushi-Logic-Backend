@@ -1,14 +1,17 @@
 const SubscriptionPlans = require('../models/SubscriptionPlans');
 const UserSubscriptions = require('../models/UserSubscriptions');
+const { SUBSCRIPTION_STATUS } = require('../utils/constants');
 const logger = require('../utils/logger');
 
 const createPlan = async (planData) => {
     return SubscriptionPlans.create(planData);
 };
 
-const getPlans = async (status = 'ACTIVE') => {
-    const filter = status ? { status } : {};
-    return SubscriptionPlans.find(filter).sort({ price: 1 });
+const getPlans = async (status) => {
+    // Validate status against allowed enum values to prevent NoSQL injection
+    const allowedStatuses = Object.values(SUBSCRIPTION_STATUS);
+    const validStatus = status && allowedStatuses.includes(status) ? status : SUBSCRIPTION_STATUS.ACTIVE;
+    return SubscriptionPlans.find({ status: validStatus }).sort({ price: 1 });
 };
 
 const getPlanById = async (planId) => {

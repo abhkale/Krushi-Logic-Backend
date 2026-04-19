@@ -74,9 +74,13 @@ const login = async ({ email, phone, password }) => {
 };
 
 const generateToken = (userId, role) => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('JWT_SECRET environment variable is not set');
+    }
     return jwt.sign(
         { userId: userId.toString(), role },
-        process.env.JWT_SECRET || 'default_secret_change_in_production',
+        secret,
         { expiresIn: JWT.EXPIRES_IN }
     );
 };
