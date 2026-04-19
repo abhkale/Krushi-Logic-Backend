@@ -1,0 +1,1143 @@
+{
+  "info": {
+    "_postman_id": "krushi-logic-backend-collection",
+    "name": "Krushi Logic – Agro Marketplace API",
+    "description": "Complete API collection for the Krushi Logic Agro Marketplace backend.\n\n## Setup\n1. Set the `baseUrl` variable to your server (default: http://localhost:3000)\n2. Run **POST /api/auth/login** – the `authToken` variable is set automatically.\n3. Use any protected endpoint with the token auto-injected via the collection-level pre-request script.\n\n## Default Seed Credentials\n- Email: `rajesh@example.com`  Password: `Password@123` (SUPPLIER)\n- Email: `priya@example.com`   Password: `Password@123` (BUYER)\n- Email: `admin@krushi.com`    Password: `Password@123` (ADMIN)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "authToken", "value": "", "type": "string" },
+    { "key": "userId", "value": "", "type": "string" },
+    { "key": "productId", "value": "", "type": "string" },
+    { "key": "categoryId", "value": "", "type": "string" },
+    { "key": "leadId", "value": "", "type": "string" },
+    { "key": "planId", "value": "", "type": "string" },
+    { "key": "paymentId", "value": "", "type": "string" },
+    { "key": "notificationId", "value": "", "type": "string" },
+    { "key": "reviewId", "value": "", "type": "string" },
+    { "key": "transportId", "value": "", "type": "string" },
+    { "key": "roleId", "value": "", "type": "string" },
+    { "key": "permissionId", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{authToken}}", "type": "string" }]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Collection-level pre-request: token is already stored in authToken variable",
+          "// No extra action needed here – individual login request sets it."
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "User registration, login and logout endpoints.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test_supplier\",\n  \"email\": \"test_supplier@example.com\",\n  \"phone\": \"9800000001\",\n  \"password\": \"Password@123\",\n  \"role\": \"SUPPLIER\"\n}"
+            },
+            "description": "Register a new user. Role must be one of: SUPPLIER, BUYER, FARMER, TRANSPORTER."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.token) pm.collectionVariables.set('authToken', body.token);",
+                  "  if (body.user && body.user._id) pm.collectionVariables.set('userId', body.user._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rajesh@example.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "description": "Authenticate a user and receive a JWT token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.token) pm.collectionVariables.set('authToken', body.token);",
+                  "  if (body.user && body.user._id) pm.collectionVariables.set('userId', body.user._id);",
+                  "  console.log('Login successful. Token stored.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] },
+            "description": "Logout the current user (invalidates the token server-side if refresh tokens are used)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('authToken', '');",
+                  "  console.log('Logged out. Token cleared.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints.",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "Retrieve paginated list of all users. Requires authentication."
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}"] },
+            "description": "Get a specific user's profile by their MongoDB ObjectId."
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"rajesh_supplier_updated\",\n  \"phone\": \"9876543210\"\n}"
+            },
+            "description": "Update an existing user's details."
+          }
+        },
+        {
+          "name": "Get Users by Role",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/role/SUPPLIER", "host": ["{{baseUrl}}"], "path": ["api", "users", "role", "SUPPLIER"] },
+            "description": "Filter users by their role. Replace SUPPLIER with BUYER, FARMER, TRANSPORTER, or ADMIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "description": "Product listing management endpoints.",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "List all active product listings. Public endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const products = body.products || body.data || [];",
+                  "  if (products.length > 0) pm.collectionVariables.set('productId', products[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Product Listing",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Premium Basmati Rice – 10 MT\",\n  \"description\": \"Grade A long-grain basmati rice from Punjab\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"price\": 7800,\n  \"quantity\": 10000,\n  \"unit\": \"kg\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "description": "Create a new product listing. Requires SUPPLIER or FARMER role."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const product = body.listing || body.product || body.data;",
+                  "  if (product && product._id) pm.collectionVariables.set('productId', product._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "{{productId}}"] },
+            "description": "Get a specific product listing by its MongoDB ObjectId."
+          }
+        },
+        {
+          "name": "Update Product Listing",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "{{productId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 8000,\n  \"quantity\": 9000,\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "description": "Update an existing product listing. Only the listing owner can update."
+          }
+        },
+        {
+          "name": "Delete Product Listing",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "{{productId}}"] },
+            "description": "Delete (or mark as INACTIVE) a product listing. Only the owner can delete."
+          }
+        },
+        {
+          "name": "Get Products by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/products/category/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "category", "{{categoryId}}"] },
+            "description": "Filter product listings by category ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "description": "Product category management endpoints.",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api", "categories"] },
+            "description": "List all product categories. Public endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const cats = body.categories || body.data || body;",
+                  "  if (Array.isArray(cats) && cats.length > 0) pm.collectionVariables.set('categoryId', cats[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api", "categories"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Oilseeds\",\n  \"description\": \"Groundnut, sunflower, soybean and other oilseeds\"\n}"
+            },
+            "description": "Create a new product category. Requires ADMIN role."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const cat = body.category || body.data;",
+                  "  if (cat && cat._id) pm.collectionVariables.set('categoryId', cat._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "categories", "{{categoryId}}"] },
+            "description": "Get a specific category by its MongoDB ObjectId."
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "categories", "{{categoryId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"All grains, cereals and millet varieties\"\n}"
+            },
+            "description": "Update a category. Requires ADMIN role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "RBAC",
+      "description": "Role-Based Access Control endpoints.",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/rbac/roles", "host": ["{{baseUrl}}"], "path": ["api", "rbac", "roles"] },
+            "description": "List all available roles."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const roles = body.roles || body.data || body;",
+                  "  if (Array.isArray(roles) && roles.length > 0) pm.collectionVariables.set('roleId', roles[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/rbac/roles", "host": ["{{baseUrl}}"], "path": ["api", "rbac", "roles"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"MODERATOR\",\n  \"description\": \"Content moderation role\"\n}"
+            },
+            "description": "Create a new role. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/rbac/permissions", "host": ["{{baseUrl}}"], "path": ["api", "rbac", "permissions"] },
+            "description": "List all available permissions."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const perms = body.permissions || body.data || body;",
+                  "  if (Array.isArray(perms) && perms.length > 0) pm.collectionVariables.set('permissionId', perms[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/rbac/permissions", "host": ["{{baseUrl}}"], "path": ["api", "rbac", "permissions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"EXPORT_DATA\",\n  \"description\": \"Permission to export platform data\"\n}"
+            },
+            "description": "Create a new permission. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/rbac/assign-role", "host": ["{{baseUrl}}"], "path": ["api", "rbac", "assign-role"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"roleId\": \"{{roleId}}\"\n}"
+            },
+            "description": "Assign a role to a user. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "Assign Permission to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/rbac/assign-permission", "host": ["{{baseUrl}}"], "path": ["api", "rbac", "assign-permission"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"permissionId\": \"{{permissionId}}\",\n  \"type\": \"GRANT\"\n}"
+            },
+            "description": "Assign (or deny) a permission to a specific user. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "Get User Permissions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/rbac/user/{{userId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "rbac", "user", "{{userId}}", "permissions"] },
+            "description": "Get all permissions assigned to a specific user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leads",
+      "description": "Trade lead management endpoints.",
+      "item": [
+        {
+          "name": "Get All Leads",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "List leads associated with the authenticated user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const leads = body.leads || body.data || [];",
+                  "  if (leads.length > 0) pm.collectionVariables.set('leadId', leads[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/leads", "host": ["{{baseUrl}}"], "path": ["api", "leads"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerId\": \"REPLACE_WITH_SELLER_ID\",\n  \"productId\": \"{{productId}}\"\n}"
+            },
+            "description": "Create a new trade lead (buyer expressing interest in a product listing)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const lead = body.lead || body.data;",
+                  "  if (lead && lead._id) pm.collectionVariables.set('leadId', lead._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Lead by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/leads/{{leadId}}", "host": ["{{baseUrl}}"], "path": ["api", "leads", "{{leadId}}"] },
+            "description": "Get a specific lead by its MongoDB ObjectId."
+          }
+        },
+        {
+          "name": "Update Lead",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/leads/{{leadId}}", "host": ["{{baseUrl}}"], "path": ["api", "leads", "{{leadId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isContactViewed\": true\n}"
+            },
+            "description": "Update lead status (e.g. mark contact as viewed)."
+          }
+        },
+        {
+          "name": "Share Contact for Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/leads/{{leadId}}/share-contact", "host": ["{{baseUrl}}"], "path": ["api", "leads", "{{leadId}}", "share-contact"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "description": "Share seller contact details with the buyer for a specific lead. Decrements subscription lead limit."
+          }
+        },
+        {
+          "name": "Get Lead Interactions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/leads/{{leadId}}/interactions", "host": ["{{baseUrl}}"], "path": ["api", "leads", "{{leadId}}", "interactions"] },
+            "description": "Get all interaction history for a specific lead."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lead Interactions",
+      "description": "Record and retrieve lead interaction events.",
+      "item": [
+        {
+          "name": "Create Lead Interaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/leads/{{leadId}}/interactions", "host": ["{{baseUrl}}"], "path": ["api", "leads", "{{leadId}}", "interactions"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"CALL\"\n}"
+            },
+            "description": "Record a new interaction for a lead. Type must be one of: VIEW, CALL, WHATSAPP, MESSAGE."
+          }
+        },
+        {
+          "name": "Get Interactions for Lead",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/leads/{{leadId}}/interactions", "host": ["{{baseUrl}}"], "path": ["api", "leads", "{{leadId}}", "interactions"] },
+            "description": "Get all interactions for a specific lead."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "description": "Subscription plan management and user subscription endpoints.",
+      "item": [
+        {
+          "name": "Get Subscription Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/subscriptions/plans", "host": ["{{baseUrl}}"], "path": ["api", "subscriptions", "plans"] },
+            "description": "List all active subscription plans. Public endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const plans = body.plans || body.data || body;",
+                  "  if (Array.isArray(plans) && plans.length > 0) pm.collectionVariables.set('planId', plans[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Subscription Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/subscriptions/plans", "host": ["{{baseUrl}}"], "path": ["api", "subscriptions", "plans"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Starter\",\n  \"price\": 199,\n  \"durationDays\": 15,\n  \"leadLimit\": 5,\n  \"features\": [\"5 lead contacts\", \"Basic search\"],\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "description": "Create a new subscription plan. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "Get User Subscription",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/subscriptions/user/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "subscriptions", "user", "{{userId}}"] },
+            "description": "Get active subscription for a specific user."
+          }
+        },
+        {
+          "name": "Purchase Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/subscriptions/purchase", "host": ["{{baseUrl}}"], "path": ["api", "subscriptions", "purchase"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": \"{{planId}}\",\n  \"paymentMode\": \"UPI\"\n}"
+            },
+            "description": "Purchase a subscription plan. Creates a payment record and activates the subscription on success."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const payment = body.payment || body.data;",
+                  "  if (payment && payment._id) pm.collectionVariables.set('paymentId', payment._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "description": "Payment processing and verification endpoints.",
+      "item": [
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/payments", "host": ["{{baseUrl}}"], "path": ["api", "payments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": \"{{planId}}\",\n  \"amount\": 1499,\n  \"paymentMode\": \"UPI\"\n}"
+            },
+            "description": "Initiate a new payment for a subscription plan."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const payment = body.payment || body.data;",
+                  "  if (payment && payment._id) pm.collectionVariables.set('paymentId', payment._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/payments/{{paymentId}}", "host": ["{{baseUrl}}"], "path": ["api", "payments", "{{paymentId}}"] },
+            "description": "Get details of a specific payment."
+          }
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/payments/{{paymentId}}/verify", "host": ["{{baseUrl}}"], "path": ["api", "payments", "{{paymentId}}", "verify"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"TXN20240101099\",\n  \"paymentStatus\": \"SUCCESS\"\n}"
+            },
+            "description": "Verify/update the status of a pending payment. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "Get Payments by User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/payments/user/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "payments", "user", "{{userId}}"] },
+            "description": "Get all payment records for a specific user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transport",
+      "description": "Transport request management endpoints.",
+      "item": [
+        {
+          "name": "Get All Transport Requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transport/requests?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transport", "requests"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "List transport requests (filtered to the current user's requests)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const requests = body.requests || body.data || [];",
+                  "  if (requests.length > 0) pm.collectionVariables.set('transportId', requests[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Transport Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/transport/requests", "host": ["{{baseUrl}}"], "path": ["api", "transport", "requests"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerId\": \"REPLACE_WITH_SELLER_ID\",\n  \"productId\": \"{{productId}}\",\n  \"sourceLocationId\": \"REPLACE_WITH_SOURCE_LOCATION_ID\",\n  \"destinationLocationId\": \"REPLACE_WITH_DEST_LOCATION_ID\",\n  \"expectedPrice\": 18000\n}"
+            },
+            "description": "Create a new transport request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const req = body.request || body.data;",
+                  "  if (req && req._id) pm.collectionVariables.set('transportId', req._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Transport Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/transport/requests/{{transportId}}", "host": ["{{baseUrl}}"], "path": ["api", "transport", "requests", "{{transportId}}"] },
+            "description": "Get a specific transport request by its MongoDB ObjectId."
+          }
+        },
+        {
+          "name": "Update Transport Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/transport/requests/{{transportId}}", "host": ["{{baseUrl}}"], "path": ["api", "transport", "requests", "{{transportId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\",\n  \"transporterId\": \"REPLACE_WITH_TRANSPORTER_ID\"\n}"
+            },
+            "description": "Update a transport request status."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "Notification management endpoints.",
+      "item": [
+        {
+          "name": "Get All Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Get all notifications for the authenticated user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const notifs = body.notifications || body.data || [];",
+                  "  if (notifs.length > 0) pm.collectionVariables.set('notificationId', notifs[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/notifications", "host": ["{{baseUrl}}"], "path": ["api", "notifications"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Test Notification\",\n  \"message\": \"This is a test notification message.\",\n  \"type\": \"GENERAL\"\n}"
+            },
+            "description": "Create a new notification. Usually called internally or by ADMIN."
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notifications/{{notificationId}}/read", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "{{notificationId}}", "read"] },
+            "description": "Mark a specific notification as read."
+          }
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notifications/{{notificationId}}", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "{{notificationId}}"] },
+            "description": "Delete a specific notification."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "description": "Product and user review endpoints.",
+      "item": [
+        {
+          "name": "Get Reviews for Product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/reviews/product/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "reviews", "product", "{{productId}}"] },
+            "description": "Get all reviews for a specific product listing."
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api", "reviews"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewedUserId\": \"REPLACE_WITH_SELLER_ID\",\n  \"productId\": \"{{productId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excellent quality and fast delivery!\"\n}"
+            },
+            "description": "Create a review for a product or user. Requires authentication."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const review = body.review || body.data;",
+                  "  if (review && review._id) pm.collectionVariables.set('reviewId', review._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Review by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/reviews/{{reviewId}}", "host": ["{{baseUrl}}"], "path": ["api", "reviews", "{{reviewId}}"] },
+            "description": "Get a specific review by its MongoDB ObjectId."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profiles",
+      "description": "Role-specific profile management endpoints.",
+      "item": [
+        {
+          "name": "Get Supplier Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/profiles/supplier/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "profiles", "supplier", "{{userId}}"] },
+            "description": "Get the supplier profile for a specific user."
+          }
+        },
+        {
+          "name": "Create / Update Supplier Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/profiles/supplier", "host": ["{{baseUrl}}"], "path": ["api", "profiles", "supplier"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"My Agri Business\",\n  \"estNumber\": \"EST-2024-001\",\n  \"licenseNumber\": \"LIC-AGR-2024\"\n}"
+            },
+            "description": "Create or update the supplier profile for the authenticated user."
+          }
+        },
+        {
+          "name": "Get Buyer Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/profiles/buyer/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "profiles", "buyer", "{{userId}}"] },
+            "description": "Get the buyer profile for a specific user."
+          }
+        },
+        {
+          "name": "Create / Update Buyer Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/profiles/buyer", "host": ["{{baseUrl}}"], "path": ["api", "profiles", "buyer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"My Buying Company\",\n  \"businessType\": \"Retailer\"\n}"
+            },
+            "description": "Create or update the buyer profile for the authenticated user."
+          }
+        },
+        {
+          "name": "Get Farmer Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/profiles/farmer/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "profiles", "farmer", "{{userId}}"] },
+            "description": "Get the farmer profile for a specific user."
+          }
+        },
+        {
+          "name": "Create / Update Farmer Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/profiles/farmer", "host": ["{{baseUrl}}"], "path": ["api", "profiles", "farmer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farmSize\": 8.5,\n  \"cropTypes\": [\"Wheat\", \"Barley\"],\n  \"organicCertified\": false\n}"
+            },
+            "description": "Create or update the farmer profile for the authenticated user."
+          }
+        },
+        {
+          "name": "Get Transporter Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/profiles/transporter/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "profiles", "transporter", "{{userId}}"] },
+            "description": "Get the transporter profile for a specific user."
+          }
+        },
+        {
+          "name": "Create / Update Transporter Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/profiles/transporter", "host": ["{{baseUrl}}"], "path": ["api", "profiles", "transporter"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Fast Agri Logistics\",\n  \"vehicleTypes\": [\"Truck\"],\n  \"capacity\": 8000,\n  \"ratePerKm\": 20,\n  \"availabilityStatus\": true\n}"
+            },
+            "description": "Create or update the transporter profile for the authenticated user."
+          }
+        }
+      ]
+    }
+  ]
+}
