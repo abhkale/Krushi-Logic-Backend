@@ -1,7 +1,13 @@
 const ProductListing = require('../models/product');
 const ProductImages = require('../models/ProductImages');
+const mongoose = require('mongoose');
 const { PAGINATION, PRODUCT_STATUS } = require('../utils/constants');
 const logger = require('../utils/logger');
+
+const toObjectId = (val) => {
+    if (!val) return null;
+    try { return new mongoose.Types.ObjectId(String(val)); } catch { return null; }
+};
 
 const createProduct = async (sellerId, productData) => {
     const product = await ProductListing.create({ sellerId, ...productData });
@@ -11,14 +17,18 @@ const createProduct = async (sellerId, productData) => {
 
 const getProducts = async ({ page = PAGINATION.DEFAULT_PAGE, limit = PAGINATION.DEFAULT_LIMIT, categoryId, status, sellerId, search } = {}) => {
     const filter = {};
-    if (categoryId) filter.categoryId = categoryId;
+
+    // Explicitly cast to ObjectId to prevent NoSQL injection
+    const catId = toObjectId(categoryId);
+    if (catId) filter.categoryId = catId;
 
     // Validate status against allowed enum values to prevent NoSQL injection
     const allowedStatuses = Object.values(PRODUCT_STATUS);
     if (status && allowedStatuses.includes(status)) filter.status = status;
     else filter.status = PRODUCT_STATUS.ACTIVE;
 
-    if (sellerId) filter.sellerId = sellerId;
+    const sId = toObjectId(sellerId);
+    if (sId) filter.sellerId = sId;
 
     // Escape special regex chars from user input to prevent ReDoS
     if (search) {

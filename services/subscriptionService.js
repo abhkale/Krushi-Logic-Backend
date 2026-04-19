@@ -25,7 +25,12 @@ const getPlanById = async (planId) => {
 };
 
 const updatePlan = async (planId, updateData) => {
-    const plan = await SubscriptionPlans.findByIdAndUpdate(planId, updateData, { new: true, runValidators: true });
+    // Whitelist allowed fields to prevent MongoDB operator injection
+    const allowed = ['name', 'price', 'durationDays', 'leadLimit', 'features', 'status'];
+    const safeUpdate = {};
+    allowed.forEach((f) => { if (updateData[f] !== undefined) safeUpdate[f] = updateData[f]; });
+
+    const plan = await SubscriptionPlans.findByIdAndUpdate(planId, safeUpdate, { new: true, runValidators: true });
     if (!plan) {
         const err = new Error('Plan not found');
         err.statusCode = 404;
