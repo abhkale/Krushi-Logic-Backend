@@ -4,10 +4,17 @@
   "description": "Backend for Krushi Logic - Agro Marketplace Platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "NODE_ENV=production node server.js",
     "dev": "nodemon server.js",
+
+    "build": "npm run build:prod",
+    "build:prod": "npm ci && npm prune --production",
+
+    "lint": "echo \"Add eslint if needed\"",
+    "test": "echo \"No tests configured\" && exit 0",
+
     "seed": "node scripts/run-seed.js .env.seed",
-    "postman-export": "node -e \"const fs=require('fs');const col=require('./postman-collection.json');fs.writeFileSync('postman-collection-export.json',JSON.stringify(col,null,2));console.log('Postman collection exported to postman-collection-export.json');\""
+    "postman-export": "node -e \"const fs=require('fs');const col=require('./postman-collection.json');fs.writeFileSync('postman-collection-export.json',JSON.stringify(col,null,2));console.log('Postman collection exported');\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -29,5 +36,8 @@
   },
   "keywords": ["agro", "marketplace", "backend", "nodejs"],
   "author": "abhkale",
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  }
 }

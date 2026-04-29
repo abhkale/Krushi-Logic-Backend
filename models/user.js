@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
         default: USER_STATUS.PENDING,
     },
 }, {
-    timestamps: true,
+    timestamps: true, 
 });
 
 module.exports = mongoose.model('User', userSchema);

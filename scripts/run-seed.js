@@ -26,14 +26,14 @@ require('dotenv').config({ path: envPath });
 const mongoose = require('mongoose');
 const seedDatabase = require('../seeds/seedDatabase');
 
-const MONGODB_URI =
-    process.env.MONGODB_URI || 'mongodb://localhost:27017/krushi_logic_seed';
+const MONGO_URI =
+    process.env.MONGO_URI || 'mongodb://localhost:27017/krushi_logic';
 
 // ── Connect ───────────────────────────────────────────────────────────────────
 async function run() {
-    console.log(`[RUN-SEED] Connecting to MongoDB: ${MONGODB_URI}`);
+    console.log(`[RUN-SEED] Connecting to MongoDB: ${MONGO_URI}`);
 
-    await mongoose.connect(MONGODB_URI, {
+    await mongoose.connect(MONGO_URI, {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
